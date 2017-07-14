@@ -1,0 +1,8 @@
+libdir=/home/katticar/Documents/postROP/elf
+includedir=/home/katticar/Documents/postROP/elf
+
+Name: libelf++
+Description: C++11 ELF library
+Version: 
+Libs: -L${libdir} -lelf++
+Cflags: -I${includedir}
