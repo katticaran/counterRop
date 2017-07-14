@@ -1,5 +1,0 @@
-Entered main wrapper
-Section '.dynsym':
-Address          Size    Binding Index Name  Type 
-Section '.symtab':
-Address          Size    Binding Index Name  Type 
