@@ -1,7 +1,7 @@
 
 #include "elf++.hh"
 #include "interpose.hh" //interposing exit functions
-#include "../list/list.h"
+#include "../data/list/list.h"
 
 #include <udis86.h>
 #include <link.h>
@@ -237,8 +237,8 @@ void printDis(unsigned char* buffer)
 
         if (memFlag == 1){
           memFlag = 0;
-          char** readAdd = (char**)(jumpAddress);
-          char* realAdd = *readAdd;
+          readAdd = (char**)(jumpAddress);
+          realAdd = *readAdd;
           jumpAddress = (intptr_t)realAdd;
           printf("\t\t\t\tExtracted Address = 0x%lx\n", (signed long)(jumpAddress));
         }
@@ -431,27 +431,5 @@ extern "C" int __libc_start_main(main_fn_t main_fn, int argc, char** argv,
 }
 
 
-
-
-
-
-// void single_step(uint64_t address) {
-//   printf("Enabling single step for the function at %lx\n", int_to_hex(address));
-//   uint64_t page_start = address & ~(PAGE_SIZE-1) ;
-
-//   // DEBUG("Making the start of the page readable, writable, and executable");
-//   //making the page writable, readable and executable
-//   if (mprotect((void*) page_start, PAGE_SIZE, PROT_READ | PROT_WRITE | PROT_EXEC) == -1) {
-//     cerr << "mprotect failed: " << strerror(errno) << "\n";
-//     exit(2); 
-//   }
-
-//   // DEBUG("Setting the first byte to 0xCC");
-//   //setting the first byte to 0xCC causes a SIGTRAP signal for single-stepping
-//   start_byte = ((uint8_t*)address)[0];
-//   DEBUG("Stored the original starting byte: " << int_to_hex(start_byte));
-//   ((uint8_t*)address)[0] = 0xCC;
-//   //  DEBUG("Finished enabling single step");
-// }
 
 
