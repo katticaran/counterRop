@@ -8,7 +8,7 @@
 #include <errno.h>
 #include <string.h>
 #include <stdlib.h>
-#include <bits/sigaction.h>
+//#include <bits/sigaction.h>
 
 
 
@@ -26,13 +26,12 @@ void setup_analyzer() {
   sig_action.sa_flags = SA_SIGINFO;
   sigaction(SIGTRAP, &sig_action, 0);
 
- // start_byte = trapSetup((intptr_t*)func_address);
 }
 
 
 
 uint8_t trapSetup(intptr_t address) {
-  printf("Enabling single step for the function at %lx \n", address);
+  printf("Enabling modifications to the address at %lx \n", address);
   intptr_t page_start = address & ~(PAGE_SIZE-1) ;
 
   printf("Making the start of the page readable, writable, and executable");

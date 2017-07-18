@@ -1,5 +1,5 @@
 CC=clang
-CFLAGS=-std=c11 -ggdb -Wall -pedantic
+CFLAGS=-std=c11 -ggdb -Wall -pedantic -D_POSIX_C_SOURCE=199309L
 DEPS=trap.h
 OBJ=test_trap.o trap.o
 OUTPUT=test_trap
