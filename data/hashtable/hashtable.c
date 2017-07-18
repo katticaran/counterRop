@@ -20,12 +20,10 @@ hashtable_t *hashtable_new(const int num_slots){
   if (hasharray == NULL){
     perror("Error");
     exit(1);
-  }
-    
+  }    
   for (i=0; i<num_slots; i++){
     hasharray[i] = NULL;
   }
-
   hashtable_t* hashtable = (hashtable_t*)malloc(sizeof(hashtable_t));
   if (hashtable == NULL){
     perror("Error");
@@ -34,8 +32,8 @@ hashtable_t *hashtable_new(const int num_slots){
   hashtable->tableAddr = hasharray;
   hashtable->size = num_slots;
   return hashtable;
-}
 
+}
 
 
 uint8_t* hashtable_find(hashtable_t *ht, intptr_t *key){
@@ -73,12 +71,12 @@ bool hashtable_insert(hashtable_t *ht, intptr_t* key, uint8_t* data){
   }
   entry->data = *data;
   entry->key = *key;
-  // strcpy(entry->key, key);
   entry->next =  ht->tableAddr[value];
   ht->tableAddr[value] = entry;
   return true;
 }
  
+
 
 bool hashtable_delete(hashtable_t *ht){
   if (ht == NULL){

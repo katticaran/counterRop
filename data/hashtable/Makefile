@@ -13,5 +13,6 @@ $(OUTPUT): $(OBJ)
 clean:
 	@rm -f *~
 	@rm -f *.o
+	@rm -f \#*
 	@rm -f $(OUTPUT)
 	@rm -f names
