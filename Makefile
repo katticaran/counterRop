@@ -6,7 +6,7 @@ basic: basic.o
 	gcc -o basic basic.c -ggdb -Wall -pedantic
 
 libaddr.so: ./elf/libaddr.cc $(DEPS)
-	gcc ./elf/libaddr.cc $(DEPS)  -ggdb --std=c++11 -rdynamic -shared -fPIC -o libaddr.so -ldl
+	clang++ ./elf/libaddr.cc $(DEPS)  -ggdb --std=c++11 -rdynamic -shared -fPIC -o libaddr.so -ldl
 
 clean:
 	@rm -f *~
