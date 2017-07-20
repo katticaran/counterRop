@@ -6,8 +6,8 @@
 #include <signal.h>
 
 
-uint8_t single_step(intptr_t address);
-void setup_analyzer();
+uint8_t trapSetup(intptr_t address);
+int setup_analyzer();
 void trap_handler(int signal, siginfo_t* info, void* cont);
 
 

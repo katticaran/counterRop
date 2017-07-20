@@ -212,7 +212,7 @@ void printDis(unsigned char* buffer)
           printf("\t\t\t\tSETTING THE TRAPBYTE\n");
           startByte = trapSetup((intptr_t)base);
           hashtable_insert(dictionary, (intptr_t*)&base, &startByte);
-                 break;
+          break;
           
         } else {
         

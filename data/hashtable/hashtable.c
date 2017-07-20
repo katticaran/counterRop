@@ -64,7 +64,7 @@ bool hashtable_insert(hashtable_t *ht, intptr_t* key, uint8_t* data){
       current = current->next;
     }
   }
-  hashEntry_t* entry = malloc(sizeof(hashEntry_t));
+  hashEntry_t* entry = (hashEntry_t*)malloc(sizeof(hashEntry_t));
   if (entry == NULL){
     perror("Error");
     exit(1);

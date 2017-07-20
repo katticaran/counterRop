@@ -1,8 +1,8 @@
-CC=clang
+CC=gcc
 CFLAGS=-std=c11 -ggdb -Wall -pedantic -D_POSIX_C_SOURCE=199309L
 DEPS=trap.h
-OBJ=test_trap.o trap.o
-OUTPUT=test_trap
+OBJ=trap_test.o trap.o
+OUTPUT=trap_test
 
 %.o: %.c $(DEPS)
 	$(CC) $(CFLAGS) -c -o $@ $<

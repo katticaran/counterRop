@@ -18,14 +18,14 @@ uint8_t start_byte;
 
 void trap_handler(int signal, siginfo_t* info, void* cont); 
 
-void setup_analyzer() {
+int setup_analyzer() {
   struct sigaction sig_action;
   memset(&sig_action, 0, sizeof(sig_action));
   sig_action.sa_sigaction = trap_handler;
   sigemptyset(&sig_action.sa_mask);
   sig_action.sa_flags = SA_SIGINFO;
   sigaction(SIGTRAP, &sig_action, 0);
-
+  return 0;
 }
 
 
@@ -34,7 +34,7 @@ uint8_t trapSetup(intptr_t address) {
   printf("Enabling modifications to the address at %lx \n", address);
   intptr_t page_start = address & ~(PAGE_SIZE-1) ;
 
-  printf("Making the start of the page readable, writable, and executable");
+  printf("Making the start of the page readable, writable, and executable\n");
   //making the page writable, readable and executable
     if (mprotect((void*) page_start, PAGE_SIZE, PROT_READ | PROT_WRITE | PROT_EXEC) == -1) {
     printf("mprotect failed: %s\n",strerror(errno));
