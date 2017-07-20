@@ -16,8 +16,8 @@ int a = 10;
 int b = 12;
 //printf("The sum is %d\n", a+b);
 
-a = testFunc0();
-b = testFunc1();
+a = testFunc1();
+b = testFunc0();
  
  
 return a+b ;

@@ -3,6 +3,7 @@
 
 #include <stdbool.h>
 #include <stdint.h>
+#include "jhash.h"
 
 typedef struct hashEntry{
   intptr_t key;
@@ -20,7 +21,7 @@ hashtable_t *hashtable_new(const int num_slots);
 
 //finds an element within the hashtable. Returns the key if found.
 //else returns NULL
-uint8_t *hashtable_find(hashtable_t *ht, intptr_t *key);
+uint8_t hashtable_find(hashtable_t *ht, intptr_t *key);
 
 //Inserts a new element into the hashtable. Creates a node and copies
 //the pointer key and data into their respective fields within the node.

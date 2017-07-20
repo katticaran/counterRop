@@ -36,19 +36,19 @@ hashtable_t *hashtable_new(const int num_slots){
 }
 
 
-uint8_t* hashtable_find(hashtable_t *ht, intptr_t *key){
+uint8_t hashtable_find(hashtable_t *ht, intptr_t *key){
   unsigned long value = JenkinsHash((char*)key, ht->size);
   if ( ht->tableAddr[value] == NULL){
-    return NULL;
+    return 0;
   }
   hashEntry_t* current = ht->tableAddr[value];
   while(current != NULL){
     if (current->key == *key){
-      return (&(current->data));
+      return (current->data);
     }
     current = current->next;
   }
-  return NULL;
+  return 0;
 }
 
 
