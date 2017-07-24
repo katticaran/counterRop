@@ -33,7 +33,7 @@ static int callback(struct dl_phdr_info *info, size_t size, void *data) ;
 string file_readline(string path);
 uint64_t find_address(const char* file_path, string func_name);
 vector<string> find_in_dir(string dir, string substr);
-void printDis(unsigned char* buffer);
+void printDis(intptr_t buffer);
 ud_t ud_obj;
 
 typedef int (*main_fn_t)(int, char**, char**);
@@ -49,7 +49,7 @@ static int wrapped_main(int argc, char** argv, char** env) {
 
   list_insert(address_list, (intptr_t)func_address);
 
-  unsigned char* buffer;
+  intptr_t buffer;
 
   // udis initialization
 
@@ -58,7 +58,7 @@ static int wrapped_main(int argc, char** argv, char** env) {
   ud_set_syntax(&ud_obj, UD_SYN_INTEL);
   ud_set_vendor(&ud_obj, UD_VENDOR_INTEL);
  
-  while ((buffer = (unsigned char*)list_pop(address_list)) != NULL){
+  while ((buffer = list_pop(address_list)) != (intptr_t)NULL){
     printDis(buffer);
   }
 
@@ -76,7 +76,7 @@ static int wrapped_main(int argc, char** argv, char** env) {
 
 
 
-void printDis(unsigned char* buffer)
+void printDis(intptr_t buffer)
 {
 
   // if i am able to insert it into this list, then it hasnt already
@@ -84,7 +84,7 @@ void printDis(unsigned char* buffer)
   int test = list_insert(disas_address_list, (intptr_t)buffer);
   if (test != 0){
     printf("\nFUNC ADDRESS: 0x%lx\n", (intptr_t)buffer);
-    ud_set_input_buffer(&ud_obj, buffer,  100);
+    ud_set_input_buffer(&ud_obj, (unsigned char*)buffer,  100);
 
     char** readAdd;
     char* realAdd;
