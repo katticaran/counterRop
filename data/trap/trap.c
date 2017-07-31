@@ -83,9 +83,7 @@ void trap_handler(int signal, siginfo_t* info, void* cont) {
  /* printf("The REAL startbyte = %x\n", value); */
  /* ((uint8_t*)address)[0] = value; */
 
-
- 
-  intptr_t buffer;
+ intptr_t buffer, offset;
   char** readAdd;
   char* realAdd;
   intptr_t indirectAddress, callAddress, validAddress, jumpAddress;
@@ -100,10 +98,19 @@ void trap_handler(int signal, siginfo_t* info, void* cont) {
   switch (opr->type){
   case UD_OP_MEM:
     {
-    printf("\t\t\t\tIt is a MEM\n");
-    intptr_t offset = opr->lval.sdword;
-    indirectAddress = (intptr_t)(base+size+offset);
-    printf("\t\t\t\tIndirect Address = 0x%lx\n", indirectAddress);
+      printf("\t\t\t\tIt is a MEM\n");
+      switch (opr->size){
+      case 8:  offset = opr->lval.sbyte;
+        break;
+      case 16: offset = opr->lval.sword;
+        break;
+      case 32: offset = opr->lval.sdword;
+        break;
+      case 64: offset = opr->lval.sqword;
+        break;
+      }
+      indirectAddress = (intptr_t)(base+size+offset);
+      printf("\t\t\t\tIndirect Address = 0x%lx\n", indirectAddress);
   
     readAdd = (char**)(indirectAddress);
     realAdd = *readAdd;
@@ -116,7 +123,31 @@ void trap_handler(int signal, siginfo_t* info, void* cont) {
     break;
     }
   case UD_OP_REG:
-    printf("\t\t\t\tIt is a REG \n");
+    printf("\t\t\t\tIt is a REEEEEEEeG \n");
+    switch(opr->base)
+      {
+      case UD_R_RAX:
+      case UD_R_RCX:
+      case UD_R_RDX:
+      case UD_R_RBX:
+      case UD_R_RSP:
+      case UD_R_RBP:
+      case UD_R_RSI:
+      case UD_R_RDI:
+      case UD_R_R8:
+      case UD_R_R9:
+      case UD_R_R10:
+      case UD_R_R11:
+      case UD_R_R12:
+      case UD_R_R13:
+      case UD_R_R14:
+      case UD_R_R15:
+          printf("\t\t\t\t\t\tHERHEHEHREHRHEHREHRHER\n");
+        break;
+      default:
+        printf("\t\t\t\t\tNONONONONONONONO\n");
+      }
+    
     break;
   default:
     printf("\t\t\t\tError: No Idea\n");
@@ -124,17 +155,11 @@ void trap_handler(int signal, siginfo_t* info, void* cont) {
     break;
   }
 
-  // validAddress = (intptr_t)(base+size);
-  //list_insert(valid_address_list, validAddress);
-
-
   while ((buffer= list_pop(address_list)) != (intptr_t)NULL){
+      printf("Within handler\n");
     printDis(buffer);
   }
-  
-
-  
-  
+   
   printf("Finished trap handler\n");
 
 }

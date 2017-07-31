@@ -35,7 +35,8 @@ uint64_t find_address(const char* file_path, string func_name);
 vector<string> find_in_dir(string dir, string substr);
 void printDis(intptr_t buffer);
 ud_t ud_obj;
-
+void print_proc_maps();
+  
 typedef int (*main_fn_t)(int, char**, char**);
 main_fn_t og_main;
 
@@ -96,7 +97,8 @@ void printDis(intptr_t buffer)
     intptr_t offset;
     intptr_t callAddress, jumpAddress, validAddress;
     int breakFlag = 1; //to break while loop on an undonditional jmp
-    int memFlag = 0; //to access the jump location from memory
+    int memFlag = 0;
+    int regFlag = 0; //to access the jump location from memory
     int condJumpFlag = 1;
     
     //inspect each instruction
@@ -113,7 +115,7 @@ void printDis(intptr_t buffer)
       switch (ud_insn_mnemonic(&ud_obj)){
 
       case UD_Icall: {
-            printf("\t\t\t\tTIS A CALL!\n");
+        printf("\t\t\t\tTIS A CALL!\n");
         // getting operand information required to find call address.
         opr = ud_insn_opr(&ud_obj, 0);
         switch (opr->type){
@@ -132,13 +134,23 @@ void printDis(intptr_t buffer)
         
         size =  ud_insn_len(&ud_obj);
         base = ud_insn_ptr(&ud_obj);
-        offset = opr->lval.sdword;
-        callAddress = (intptr_t)(base+size+offset);
+        switch (opr->size){
+        case 8:  offset = opr->lval.sbyte;
+          break;
+        case 16: offset = opr->lval.sword;
+          break;
+        case 32: offset = opr->lval.sdword;
+            break;
+        case 64: offset = opr->lval.sqword;
+          break;
+        }
+         callAddress = (intptr_t)(base+size+offset);
+        // callAddress = (intptr_t) (offset);
         printf("\t\t\t\tCalled Address = 0x%lx\n", callAddress);   
 
 
         if (memFlag == 1){
-           memFlag = 0;
+          memFlag = 0;
           // readAdd = (char**)(jumpAddress);
           // realAdd = *readAdd;
           // jumpAddress = (intptr_t)realAdd;
@@ -166,6 +178,7 @@ void printDis(intptr_t buffer)
       case UD_Ijb:
       case UD_Ijbe:
       case UD_Ijecxz:
+      case UD_Ijle:
       case UD_Ijl:
       case UD_Ijae:
       case UD_Ija:
@@ -189,20 +202,45 @@ void printDis(intptr_t buffer)
         case UD_OP_JIMM:
           printf("\t\t\t\tIt is a JIMM \n");
           break;
+        case UD_OP_IMM:
+          printf("\t\t\t\tIt is a IMM \n");
+          break;
+        case UD_OP_PTR:
+          printf("\t\t\t\tIt is a PTR \n");
+          break;
+        case UD_OP_CONST:
+          printf("\t\t\t\tIt is a CONST \n");
+          break;
+        case UD_OP_REG:
+          regFlag = 1;
+          printf("\t\t\t\tIt is a REG \n");
+          break;
         default:
           printf("\t\t\t\tNo Idea\n");
           break;
         }
+      
         
         size =  ud_insn_len(&ud_obj);
         base = ud_insn_ptr(&ud_obj);
-        offset = opr->lval.sdword;
+        switch (opr->size){
+        case 8:  offset = opr->lval.sbyte;
+          break;
+        case 16: offset = opr->lval.sword;
+          break;
+        case 32: offset = opr->lval.sdword;
+          break;
+        case 64: offset = opr->lval.sqword;
+          break;
+        }
+
         printf("\t\t\t\tBase:0x%lx   Size: %d   Offset:0x%lx  \n", (unsigned long)base, size, offset); 
         jumpAddress = (intptr_t)(base+size+offset);
         printf("\t\t\t\tJump Address = 0x%lx\n",jumpAddress);
         
-        if (memFlag == 1){
+        if (memFlag == 1 || regFlag == 1){
           memFlag = 0;
+          regFlag = 0;
           // char** readAdd = (char**)(jumpAddress);
           // char* realAdd = *readAdd;
           // jumpAddress = (intptr_t)realAdd;
@@ -212,12 +250,12 @@ void printDis(intptr_t buffer)
           printf("\t\t\t\tSETTING THE TRAPBYTE\n");
           startByte = trapSetup((intptr_t)base);
           hashtable_insert(dictionary, (intptr_t*)&base, &startByte);
-                 break;
+          break;
           
         } else {
         
-        list_insert(address_list, jumpAddress);
-        break;
+          list_insert(address_list, jumpAddress);
+          break;
         }
       }
 
@@ -335,7 +373,7 @@ extern "C" int __libc_start_main(main_fn_t main_fn, int argc, char** argv,
 
 
   printf("INPUT ARGS: %s, %s, %s\n", argv[0], argv[1], argv[2]);
-          
+  print_proc_maps();  
   //Find original __libc_start_main
   auto og_libc_start_main =
     (decltype(__libc_start_main)*)dlsym(RTLD_NEXT, "__libc_start_main");
@@ -352,3 +390,23 @@ extern "C" int __libc_start_main(main_fn_t main_fn, int argc, char** argv,
 
 
 
+void print_proc_maps()
+{
+   int pid = getpid();
+   char maps_file_name[1024];
+   sprintf(maps_file_name, "/proc/%d/maps", pid);
+   
+   FILE *input = fopen(maps_file_name, "r");
+   FILE *output = fopen("maps.log", "w");
+
+   while(!feof(input))
+   {
+       char *line = 0;
+       size_t n = 0;
+       getline(&line, &n, input);
+       fprintf(output, "%s", line);
+   }
+   
+   fclose(input);
+   fclose(output);
+}
