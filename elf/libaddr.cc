@@ -4,6 +4,7 @@
 #include "../data/hashtable/hashtable.h"
 #include "../data/list/list.h"
 #include "../data/trap/trap.h"
+#include "../data/trie/trie.h"
 
 #include <udis86.h>
 #include <link.h>

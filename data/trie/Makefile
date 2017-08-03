@@ -1,5 +1,5 @@
-CC=gcc
-CFLAGS=-std=c11 -Wall -pedantic -ggdb
+CC=g++
+CFLAGS=-std=c++11 -Wall -pedantic -ggdb
 DEPS=trie.h
 OBJ=trieTest.o trie.o
 OUTPUT=trieTest

@@ -33,7 +33,7 @@ typedef struct trieData{
 }trieData_t;
 
 //creates a new list data Structure.
-trie_t *trie_new();
+trie_t* trie_new();
 
 //inserts a range into the trie. If upperVal is greater than the
 // allowed upperBound, then the range is lowerVal to upperBound-1.

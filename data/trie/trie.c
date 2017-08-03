@@ -1,11 +1,8 @@
 /*
-  list by JOEL KATTICARAN.
+ trie by JOEL KATTICARAN.
   Date: 26-June-2017
 
   Compilation: run Makefile using 'make'
-
-  Purpose: A doubly-linked Queue (FIFO) datastructure. Includes functions 
-  that help with insertion, searching and popping.
 
   Return Values
   0: Failure
@@ -21,6 +18,7 @@
 #include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
+#include <limits>
 #include "trie.h"
 
 trie_t *trie_new(){
@@ -78,10 +76,15 @@ trie_t* trie_insert(trie_t* trie, intptr_t lowerVal, intptr_t upperVal){
 trieData_t* boundFind(trie_t* trie, intptr_t lowerVal){
   if (trie == NULL)
     return NULL;
-
+  
+  trieData_t* metaData = (trieData_t*)malloc(sizeof(trieData_t));
+  
   if (trie->isInitialized == 0){
-    trie->isInitialized = 1;
-    
+    metaData->trie = trie;
+    metaData->isLeftChild = 0;
+    metaData->bound = lowerVal + 999;
+    metaData->node = trie->root;
+    return metaData;
   }
   
   trieNode_t* currentNode = trie->root;
@@ -101,11 +104,12 @@ trieData_t* boundFind(trie_t* trie, intptr_t lowerVal){
       currentNode = currentNode->rightChild;
     }
     else{
+      free (metaData);
       return NULL;
     }
   }
 
-  trieData_t* metaData = (trieData_t*)malloc(sizeof(trieData_t));
+
   metaData->trie = trie;
   metaData->isLeftChild = isLeft;
   metaData->bound = bound;
@@ -120,14 +124,20 @@ trieData_t* boundFind(trie_t* trie, intptr_t lowerVal){
 
 trie_t* direct_trie_insert(trieData_t* metaData, intptr_t lowerVal,
                           intptr_t upperVal){
+
+
   trieNode_t* newNode = (trieNode_t*)malloc(sizeof(trieNode_t));
   newNode->lowerBound = lowerVal;
   newNode->upperBound = upperVal;
   newNode->leftChild = NULL;
   newNode->rightChild = NULL;
   
-
-if (metaData->isLeftChild)
+  if (metaData->trie->isInitialized == 0)
+    {
+      metaData->trie->isInitialized = 1;
+      metaData->trie->root = newNode;
+    }
+  else if (metaData->isLeftChild)
   metaData->node->leftChild = newNode;
  else
    metaData->node->rightChild = newNode;
@@ -141,16 +151,22 @@ if (metaData->isLeftChild)
 
 void deleteNode(trieNode_t* node){
   if (node != NULL){
-    while ((node->leftChild != NULL) || (node->rightChild != NULL)){
-      deleteNode(node->leftChild);
-      deleteNode(node->rightChild);
-    }
+    deleteNode(node->leftChild);
+    deleteNode(node->rightChild);
     free(node);
+
   }
 }
 
 
-
+/* void free_tree(Node * node){ */
+/*    //post-order like FatalError hinted at */
+/*        if (node != NULL) { */
+/*         free_tree(node->right); */
+/*         free(node->data); //if data was heap allocated, need to free it */
+/*         free_tree(node->left); */
+/*         free(node); */
+/*      }} */
 
 
 void trie_delete(trie_t* trie){
