@@ -1,4 +1,4 @@
-DEPS = ./data/list/list.c ./data/hashtable/hashtable.c ./data/hashtable/jhash.c ./data/trap/trap.c
+DEPS = ./data/list/list.c ./data/hashtable/hashtable.c ./data/hashtable/jhash.c ./data/trap/trap.c ./data/trie/trie.c
 
 all:  libaddr.so basic
 

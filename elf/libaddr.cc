@@ -24,6 +24,12 @@ uint64_t func_address; //the address of the target function
 fstream return_file;
 fstream write_file;
 
+//Trie 
+trieData_t* data;
+ trie_t* thisTrie = trie_new();
+intptr_t boundVal;
+intptr_t lowerVal, upperVal;
+
 int res = setup_analyzer();
 list_t* address_list = list_new();
 list_t* disas_address_list = list_new();
@@ -61,7 +67,12 @@ static int wrapped_main(int argc, char** argv, char** env) {
   ud_set_vendor(&ud_obj, UD_VENDOR_INTEL);
  
   while ((buffer = list_pop(address_list)) != (intptr_t)NULL){
-    printDis(buffer);
+     data = boundFind(thisTrie,buffer);
+      if (data != NULL){
+       lowerVal = buffer;
+       boundVal = data->bound;
+       printDis(buffer);
+     }
   }
 
   
@@ -80,10 +91,11 @@ static int wrapped_main(int argc, char** argv, char** env) {
 
 void printDis(intptr_t buffer)
 {
-
+  // data = boundFind(thisTrie,buffer);
   // if i am able to insert it into this list, then it hasnt already
   // been disasembled.
   int test = list_insert(disas_address_list, (intptr_t)buffer);
+  // if (data != NULL){
   if (test != 0){
     printf("\nFUNC ADDRESS: 0x%lx\n", (intptr_t)buffer);
     ud_set_input_buffer(&ud_obj, (unsigned char*)buffer,  100);
@@ -95,17 +107,25 @@ void printDis(intptr_t buffer)
     uint8_t startByte;
     unsigned int size;
     const uint8_t* base;
+    const uint8_t* prevBase;
     intptr_t offset;
     intptr_t callAddress, jumpAddress, validAddress;
     int breakFlag = 1; //to break while loop on an undonditional jmp
     int memFlag = 0;
     int regFlag = 0; //to access the jump location from memory
     int condJumpFlag = 1;
-    
+    base = (const uint8_t *)buffer;
+    printf("BOUNDARY VALUE: 0x%lx\n", boundVal);
     //inspect each instruction
     while (breakFlag && ud_disassemble(&ud_obj)) {
-      printf("\t%s\n", ud_insn_asm(&ud_obj));
-
+      prevBase = base;
+      base = ud_insn_ptr(&ud_obj);
+      if ((intptr_t)base > boundVal){
+        break;
+      }
+      
+      printf("\t%lx: %s\n", (intptr_t)base, ud_insn_asm(&ud_obj));
+       
      
       // get out if I hit a return instruction. 
       if  ((ud_insn_mnemonic(&ud_obj)) ==  UD_Iret)
@@ -152,14 +172,6 @@ void printDis(intptr_t buffer)
 
         if (memFlag == 1){
           memFlag = 0;
-          // readAdd = (char**)(jumpAddress);
-          // realAdd = *readAdd;
-          // jumpAddress = (intptr_t)realAdd;
-          // printf("\t\t\t\tExtracted Address = 0x%lx\n", (signed long)(jumpAddress));
-          // list_insert(address_list, callAddress);
-          // validAddress = (intptr_t)(base+size);
-          // list_insert(valid_address_list, validAddress);
-          // break;
           printf("\t\t\t\tSETTING THE TRAPBYTE\n");
           startByte = trapSetup((intptr_t)base);
           hashtable_insert(dictionary, (intptr_t*)&base, &startByte);
@@ -263,7 +275,10 @@ void printDis(intptr_t buffer)
       default :
         break;
       }    
-    }
+    } //while-loop
+    upperVal = (intptr_t)base;
+    printf("\nTRIE INSERT: 0x%lx - 0x%lx\n", lowerVal, upperVal);
+    direct_trie_insert(data, lowerVal, upperVal);
   }
   printf("\n\n");
 }

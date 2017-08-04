@@ -21,6 +21,8 @@
 #include <limits>
 #include "trie.h"
 
+#define NO_BOUND 999
+
 trie_t *trie_new(){
   trie_t* theTrie = (trie_t*)malloc(sizeof(trie_t));
   theTrie->isInitialized = 0;
@@ -82,7 +84,7 @@ trieData_t* boundFind(trie_t* trie, intptr_t lowerVal){
   if (trie->isInitialized == 0){
     metaData->trie = trie;
     metaData->isLeftChild = 0;
-    metaData->bound = lowerVal + 999;
+    metaData->bound = lowerVal + NO_BOUND;
     metaData->node = trie->root;
     return metaData;
   }
@@ -92,7 +94,7 @@ trieData_t* boundFind(trie_t* trie, intptr_t lowerVal){
   int isLeft = 0;
   intptr_t bound = 0;
   while(currentNode != NULL){
-    if (lowerVal < currentNode->lowerBound){
+      if (lowerVal < currentNode->lowerBound){
       isLeft = 1;
       bound = (currentNode->lowerBound)-1;
       prevNode = currentNode;
@@ -102,6 +104,7 @@ trieData_t* boundFind(trie_t* trie, intptr_t lowerVal){
       isLeft = 0;
       prevNode = currentNode;
       currentNode = currentNode->rightChild;
+      bound = lowerVal + NO_BOUND;
     }
     else{
       free (metaData);

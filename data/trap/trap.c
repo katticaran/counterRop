@@ -8,6 +8,7 @@
 #include <errno.h>
 #include "../hashtable/hashtable.h"
 #include "../list/list.h"
+#include "../trie/trie.h"
 #include <string.h>
 #include <stdlib.h>
 #include <udis86.h>
@@ -18,6 +19,10 @@ extern void printDis(intptr_t buffer);
 extern ud_t ud_obj;
 extern list_t* address_list;
 extern list_t* valid_address_list;
+extern intptr_t boundVal, lowerVal, upperVal;
+extern trie_t* thisTrie;
+extern trieData_t* data;
+
 
 #define PAGE_SIZE 4096
 uint8_t start_byte;
@@ -156,8 +161,13 @@ void trap_handler(int signal, siginfo_t* info, void* cont) {
   }
 
   while ((buffer= list_pop(address_list)) != (intptr_t)NULL){
-      printf("Within handler\n");
-    printDis(buffer);
+    printf("Within handler\n");
+    data = boundFind(thisTrie,buffer);
+     if (data != NULL){
+      lowerVal = buffer;
+      boundVal = data->bound;
+      printDis(buffer);
+    }
   }
    
   printf("Finished trap handler\n");
