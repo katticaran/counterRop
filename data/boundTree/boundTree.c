@@ -19,33 +19,33 @@
 #include <stdlib.h>
 #include <string.h>
 #include <limits>
-#include "trie.h"
+#include "boundTree.h"
 
 #define NO_BOUND 999
 
-trie_t *trie_new(){
-  trie_t* theTrie = (trie_t*)malloc(sizeof(trie_t));
-  theTrie->isInitialized = 0;
-  return (theTrie);
+boundTree_t *boundTree_new(){
+  boundTree_t* theboundTree = (boundTree_t*)malloc(sizeof(boundTree_t));
+  theboundTree->isInitialized = 0;
+  return (theboundTree);
 }
 
-trie_t* trie_insert(trie_t* trie, intptr_t lowerVal, intptr_t upperVal){
-  if (trie == NULL)
+boundTree_t* boundTree_insert(boundTree_t* boundTree, intptr_t lowerVal, intptr_t upperVal){
+  if (boundTree == NULL)
     return NULL;
   
-  if (trie->isInitialized == 0){
-    trieNode_t* node = (trieNode_t*)malloc(sizeof(trieNode_t));
+  if (boundTree->isInitialized == 0){
+    boundTreeNode_t* node = (boundTreeNode_t*)malloc(sizeof(boundTreeNode_t));
     node->lowerBound = lowerVal;
     node->upperBound = upperVal;
     node->leftChild = NULL;
     node->rightChild = NULL;
-    trie->isInitialized = 1;
-    trie->root = node;
-    return trie;
+    boundTree->isInitialized = 1;
+    boundTree->root = node;
+    return boundTree;
   }
     
-  trieNode_t* currentNode = trie->root;
-  trieNode_t* prevNode = trie->root;
+  boundTreeNode_t* currentNode = boundTree->root;
+  boundTreeNode_t* prevNode = boundTree->root;
   int isLeft = 0;
   while(currentNode != NULL){
     if (lowerVal < currentNode->lowerBound){
@@ -61,7 +61,7 @@ trie_t* trie_insert(trie_t* trie, intptr_t lowerVal, intptr_t upperVal){
     else return NULL;
   }
 
-  trieNode_t* newNode = (trieNode_t*)malloc(sizeof(trieNode_t));
+  boundTreeNode_t* newNode = (boundTreeNode_t*)malloc(sizeof(boundTreeNode_t));
   newNode->lowerBound = lowerVal;
   newNode->upperBound = upperVal;
   newNode->leftChild = NULL;
@@ -72,25 +72,25 @@ trie_t* trie_insert(trie_t* trie, intptr_t lowerVal, intptr_t upperVal){
   else
     prevNode->rightChild = newNode;
     
-  return trie;
+  return boundTree;
 }
 
-trieData_t* boundFind(trie_t* trie, intptr_t lowerVal){
-  if (trie == NULL)
+boundTreeData_t* boundFind(boundTree_t* boundTree, intptr_t lowerVal){
+  if (boundTree == NULL)
     return NULL;
   
-  trieData_t* metaData = (trieData_t*)malloc(sizeof(trieData_t));
+  boundTreeData_t* metaData = (boundTreeData_t*)malloc(sizeof(boundTreeData_t));
   
-  if (trie->isInitialized == 0){
-    metaData->trie = trie;
+  if (boundTree->isInitialized == 0){
+    metaData->boundTree = boundTree;
     metaData->isLeftChild = 0;
     metaData->bound = lowerVal + NO_BOUND;
-    metaData->node = trie->root;
+    metaData->node = boundTree->root;
     return metaData;
   }
   
-  trieNode_t* currentNode = trie->root;
-  trieNode_t* prevNode = trie->root;
+  boundTreeNode_t* currentNode = boundTree->root;
+  boundTreeNode_t* prevNode = boundTree->root;
   int isLeft = 0;
   intptr_t bound = 0;
   while(currentNode != NULL){
@@ -113,7 +113,7 @@ trieData_t* boundFind(trie_t* trie, intptr_t lowerVal){
   }
 
 
-  metaData->trie = trie;
+  metaData->boundTree = boundTree;
   metaData->isLeftChild = isLeft;
   metaData->bound = bound;
   metaData->node = prevNode;
@@ -125,34 +125,34 @@ trieData_t* boundFind(trie_t* trie, intptr_t lowerVal){
   
   
 
-trie_t* direct_trie_insert(trieData_t* metaData, intptr_t lowerVal,
+boundTree_t* direct_boundTree_insert(boundTreeData_t* metaData, intptr_t lowerVal,
                           intptr_t upperVal){
 
 
-  trieNode_t* newNode = (trieNode_t*)malloc(sizeof(trieNode_t));
+  boundTreeNode_t* newNode = (boundTreeNode_t*)malloc(sizeof(boundTreeNode_t));
   newNode->lowerBound = lowerVal;
   newNode->upperBound = upperVal;
   newNode->leftChild = NULL;
   newNode->rightChild = NULL;
   
-  if (metaData->trie->isInitialized == 0)
+  if (metaData->boundTree->isInitialized == 0)
     {
-      metaData->trie->isInitialized = 1;
-      metaData->trie->root = newNode;
+      metaData->boundTree->isInitialized = 1;
+      metaData->boundTree->root = newNode;
     }
   else if (metaData->isLeftChild)
   metaData->node->leftChild = newNode;
  else
    metaData->node->rightChild = newNode;
 
- trie_t* trie = metaData->trie;
+ boundTree_t* boundTree = metaData->boundTree;
  free(metaData);
- return trie;
+ return boundTree;
 }
 
 
 
-void deleteNode(trieNode_t* node){
+void deleteNode(boundTreeNode_t* node){
   if (node != NULL){
     deleteNode(node->leftChild);
     deleteNode(node->rightChild);
@@ -172,9 +172,9 @@ void deleteNode(trieNode_t* node){
 /*      }} */
 
 
-void trie_delete(trie_t* trie){
-  deleteNode(trie->root);
-  free(trie);  
+void boundTree_delete(boundTree_t* boundTree){
+  deleteNode(boundTree->root);
+  free(boundTree);  
 }
 
 

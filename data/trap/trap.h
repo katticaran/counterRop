@@ -9,6 +9,6 @@
 uint8_t trapSetup(intptr_t address);
 int setup_analyzer();
 void trap_handler(int signal, siginfo_t* info, void* cont);
-
+void shutdown();
 
 #endif

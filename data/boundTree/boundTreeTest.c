@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
-#include "trie.h"
+#include "boundTree.h"
 
 #define SLOTS 100
 int a[SLOTS];
@@ -15,7 +15,7 @@ int jumpFlag;
 
 int boundVal;
 intptr_t lowerVal, upperVal;
-trieData_t* data;
+boundTreeData_t* data;
  
 int executeInstructionAt(int i);
 
@@ -39,8 +39,8 @@ int main(){
       printf("a[%d] :%d , c[%d] :%d \n", i, a[i], i, c[i]);
     }
     
-  trie_t* thisTrie = trie_new();
-  trieData_t* data = boundFind(thisTrie,0);
+  boundTree_t* thisboundTree = boundTree_new();
+  boundTreeData_t* data = boundFind(thisboundTree,0);
   boundVal = data->bound;
   lowerVal = 0;
 
@@ -50,9 +50,9 @@ int main(){
       if (jumpFlag == 1)
         {
           jumpFlag = 0;
-          direct_trie_insert(data, lowerVal , upperVal);
+          direct_boundTree_insert(data, lowerVal , upperVal);
           lowerVal = retVal;
-          data = boundFind(thisTrie,lowerVal);
+          data = boundFind(thisboundTree,lowerVal);
           if (data == NULL){
                  
             break;
@@ -63,7 +63,7 @@ int main(){
     }
        
   }
-  trie_delete(thisTrie);
+  boundTree_delete(thisboundTree);
   return 0;
 
 }

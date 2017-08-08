@@ -4,7 +4,7 @@
 #include "../data/hashtable/hashtable.h"
 #include "../data/list/list.h"
 #include "../data/trap/trap.h"
-#include "../data/trie/trie.h"
+#include "../data/boundTree/boundTree.h"
 
 #include <udis86.h>
 #include <link.h>
@@ -15,6 +15,7 @@
 #include <fstream>
 #include <iostream>
 
+#define PAGE_SIZE 4096
 #define NUM_SLOTS 500
 
 
@@ -24,17 +25,18 @@ uint64_t func_address; //the address of the target function
 fstream return_file;
 fstream write_file;
 
-//Trie 
-trieData_t* data;
- trie_t* thisTrie = trie_new();
+//boundTree 
+boundTreeData_t* data;
+boundTree_t* thisboundTree = boundTree_new();
 intptr_t boundVal;
 intptr_t lowerVal, upperVal;
 
 int res = setup_analyzer();
+list_t* start_byte_list = list_new();
 list_t* address_list = list_new();
 list_t* disas_address_list = list_new();
 list_t* valid_address_list = list_new();
-hashtable_t* dictionary = hashtable_new(NUM_SLOTS);
+hashtable_t* original_start_bytes = hashtable_new(NUM_SLOTS);
 
 static int callback(struct dl_phdr_info *info, size_t size, void *data) ;
 string file_readline(string path);
@@ -43,6 +45,7 @@ vector<string> find_in_dir(string dir, string substr);
 void printDis(intptr_t buffer);
 ud_t ud_obj;
 void print_proc_maps();
+
   
 typedef int (*main_fn_t)(int, char**, char**);
 main_fn_t og_main;
@@ -67,12 +70,12 @@ static int wrapped_main(int argc, char** argv, char** env) {
   ud_set_vendor(&ud_obj, UD_VENDOR_INTEL);
  
   while ((buffer = list_pop(address_list)) != (intptr_t)NULL){
-     data = boundFind(thisTrie,buffer);
-      if (data != NULL){
-       lowerVal = buffer;
-       boundVal = data->bound;
-       printDis(buffer);
-     }
+    data = boundFind(thisboundTree,buffer);
+    if (data != NULL){
+      lowerVal = buffer;
+      boundVal = data->bound;
+      printDis(buffer);
+    }
   }
 
   
@@ -82,6 +85,7 @@ static int wrapped_main(int argc, char** argv, char** env) {
   
   list_delete(address_list);
   list_delete(disas_address_list);
+  //  shutdown();
   return 0; 
         
 }
@@ -91,7 +95,7 @@ static int wrapped_main(int argc, char** argv, char** env) {
 
 void printDis(intptr_t buffer)
 {
-  // data = boundFind(thisTrie,buffer);
+  // data = boundFind(thisboundTree,buffer);
   // if i am able to insert it into this list, then it hasnt already
   // been disasembled.
   int test = list_insert(disas_address_list, (intptr_t)buffer);
@@ -161,20 +165,21 @@ void printDis(intptr_t buffer)
         case 16: offset = opr->lval.sword;
           break;
         case 32: offset = opr->lval.sdword;
-            break;
+          break;
         case 64: offset = opr->lval.sqword;
           break;
         }
-         callAddress = (intptr_t)(base+size+offset);
+        callAddress = (intptr_t)(base+size+offset);
         // callAddress = (intptr_t) (offset);
         printf("\t\t\t\tCalled Address = 0x%lx\n", callAddress);   
 
 
         if (memFlag == 1){
           memFlag = 0;
+          list_insert(start_byte_list, (intptr_t)base);
           printf("\t\t\t\tSETTING THE TRAPBYTE\n");
           startByte = trapSetup((intptr_t)base);
-          hashtable_insert(dictionary, (intptr_t*)&base, &startByte);
+          hashtable_insert(original_start_bytes, (intptr_t*)&base, &startByte);
           break;
         }
         else {              
@@ -247,9 +252,7 @@ void printDis(intptr_t buffer)
           break;
         }
 
-        printf("\t\t\t\tBase:0x%lx   Size: %d   Offset:0x%lx  \n", (unsigned long)base, size, offset); 
-        jumpAddress = (intptr_t)(base+size+offset);
-        printf("\t\t\t\tJump Address = 0x%lx\n",jumpAddress);
+
         
         if (memFlag == 1 || regFlag == 1){
           memFlag = 0;
@@ -261,12 +264,15 @@ void printDis(intptr_t buffer)
           // list_insert(address_list, jumpAddress);
           // break;         
           printf("\t\t\t\tSETTING THE TRAPBYTE\n");
+          list_insert(start_byte_list, (intptr_t)base);
           startByte = trapSetup((intptr_t)base);
-          hashtable_insert(dictionary, (intptr_t*)&base, &startByte);
+          hashtable_insert(original_start_bytes, (intptr_t*)&base, &startByte);
           break;
           
         } else {
-        
+          printf("\t\t\t\tBase:0x%lx   Size: %d   Offset:0x%lx  \n", (unsigned long)base, size, offset); 
+          jumpAddress = (intptr_t)(base+size+offset);
+          printf("\t\t\t\tJump Address = 0x%lx\n",jumpAddress);
           list_insert(address_list, jumpAddress);
           break;
         }
@@ -277,8 +283,8 @@ void printDis(intptr_t buffer)
       }    
     } //while-loop
     upperVal = (intptr_t)base;
-    printf("\nTRIE INSERT: 0x%lx - 0x%lx\n", lowerVal, upperVal);
-    direct_trie_insert(data, lowerVal, upperVal);
+    printf("\nBOUND-TREE INSERT: 0x%lx - 0x%lx\n", lowerVal, upperVal);
+    direct_boundTree_insert(data, lowerVal, upperVal);
   }
   printf("\n\n");
 }
@@ -362,14 +368,17 @@ vector<string> find_in_dir(string dir, string substr) {
 }
 
 INTERPOSE (exit)(int rc) {
+  // shutdown();
   real::exit(rc);
 }
 
 INTERPOSE (_exit)(int rc) {
+  // shutdown();
   real::_exit(rc);
 }
 
 INTERPOSE (_Exit)(int rc) {
+  //  shutdown();
   real::_Exit(rc); 
 }
 
@@ -400,6 +409,7 @@ extern "C" int __libc_start_main(main_fn_t main_fn, int argc, char** argv,
   //Running original __libc_start_main with wrapped main
   return og_libc_start_main(wrapped_main, argc, argv, init,
                             fini, rtld_fini, stack_end);
+
     
 }
 
@@ -408,21 +418,24 @@ extern "C" int __libc_start_main(main_fn_t main_fn, int argc, char** argv,
 
 void print_proc_maps()
 {
-   int pid = getpid();
-   char maps_file_name[1024];
-   sprintf(maps_file_name, "/proc/%d/maps", pid);
+  int pid = getpid();
+  char maps_file_name[1024];
+  sprintf(maps_file_name, "/proc/%d/maps", pid);
    
-   FILE *input = fopen(maps_file_name, "r");
-   FILE *output = fopen("maps.log", "w");
+  FILE *input = fopen(maps_file_name, "r");
+  FILE *output = fopen("maps.log", "w");
 
-   while(!feof(input))
-   {
-       char *line = 0;
-       size_t n = 0;
-       getline(&line, &n, input);
-       fprintf(output, "%s", line);
-   }
+  while(!feof(input))
+    {
+      char *line = 0;
+      size_t n = 0;
+      getline(&line, &n, input);
+      fprintf(output, "%s", line);
+    }
    
-   fclose(input);
-   fclose(output);
+  fclose(input);
+  fclose(output);
 }
+
+
+
