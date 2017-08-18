@@ -23,7 +23,9 @@ extern list_t* start_byte_list;
 extern intptr_t boundVal, lowerVal, upperVal;
 extern boundTree_t* thisboundTree;
 extern boundTreeData_t* data;
+int a;
 int regFlag = 0;
+int trapFlag = 0;
 
 
 #define PAGE_SIZE 4096
@@ -61,15 +63,36 @@ uint8_t trapSetup(intptr_t address) {
   //setting the first byte to 0xCC causes a SIGTRAP signal for single-stepping
   uint8_t start_byte = ((uint8_t*)address)[0];
   printf("The original starting byte: %x\n\n",start_byte);
+
+  // scanf("%d",&a);
+  printf("Here\n");
+  // scanf("%d",&a);
   ((uint8_t*)address)[0] = 0xCC;
-
-
-return start_byte;
+  //  printf("Here2\n");
+  //scanf("%d",&a);
+  //printf("Exiting Trap Setup\n");
+  //scanf("%d",&a);
+  return start_byte;
 }
 
 
 
 void trap_handler(int signal, siginfo_t* info, void* cont) {
+  if (trapFlag != 0){
+
+    trapFlag += 1;
+    
+     ucontext_t* context = reinterpret_cast<ucontext_t*>(cont);
+    intptr_t address= --context->uc_mcontext.gregs[REG_RIP] ;
+    ((uint8_t*)address)[0] =  hashtable_find(original_start_bytes, &address);
+    trapFlag -= 1;
+
+    return;
+
+
+    
+  }
+  trapFlag += 1;
 
   intptr_t buffer;
   char** readAdd;
@@ -136,7 +159,7 @@ void trap_handler(int signal, siginfo_t* info, void* cont) {
   }
    
   printf("Finished trap handler\n");
-
+  trapFlag -=1 ;
 }
 
 
